@@ -73,7 +73,21 @@ Continue working on a change by creating the next artifact.
    - This shouldn't happen with a valid schema
    - Show status and suggest checking for issues
 
-4. **After creating an artifact, show progress**
+4. **After creating an artifact, run automatic review**
+
+   Spawn a review **Agent** to review the artifact just created. Follow the review process defined in `/opsx:review`:
+
+   a. Read the created artifact and its dependency artifacts
+   b. Spawn a review Agent with the artifact content, dependency content, and review criteria for this artifact type (see `/opsx:review` for criteria by type)
+   c. If the review Agent returns **NEEDS_REVISION**:
+      - Apply all CRITICAL and WARNING fixes
+      - Spawn a NEW review Agent (fresh context) to re-review
+      - Repeat until PASS or max 3 iterations
+   d. Show review summary (iterations count, issues fixed)
+
+   **Review Agent prompt**: Use the same prompt template and criteria defined in `/opsx:review`.
+
+5. **Show progress**
    ```bash
    openspec status --change "<name>"
    ```

@@ -55,7 +55,10 @@ Fast-forward through artifact creation - generate everything needed to start imp
       - Read any completed dependency files for context
       - Create the artifact file using `template` as the structure
       - Apply `context` and `rules` as constraints - but do NOT copy them into the file
-      - Show brief progress: "✓ Created <artifact-id>"
+      - **Run automatic review** (same process as `/opsx:review`):
+        - Spawn a review Agent with artifact content, dependencies, and review criteria
+        - If NEEDS_REVISION: fix issues, re-review with new Agent (max 3 iterations)
+        - Show brief result: "✓ Created <artifact-id> (review: PASS, N iterations)"
 
    b. **Continue until all `applyRequires` artifacts are complete**
       - After creating each artifact, re-run `openspec status --change "<name>" --json`
