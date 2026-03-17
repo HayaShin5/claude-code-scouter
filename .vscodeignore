@@ -3,6 +3,7 @@
 .claude/**
 .github/**
 src/**
+!src/assets/icon.jpg
 out/test/**
 node_modules/**
 openspec/**
