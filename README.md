@@ -8,7 +8,7 @@
 ## Demo
 
 <p align="center">
-  <img src="https://github.com/HayaShin5/claude-code-scouter/releases/download/v0.0.1/demo-claude-code-scouter.mp4" alt="Demo" width="600">
+  <video src="https://github.com/HayaShin5/claude-code-scouter/releases/download/v0.0.1/demo-claude-code-scouter.mp4" width="600" autoplay loop muted></video>
 </p>
 
 ## Why?
