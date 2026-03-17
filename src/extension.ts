@@ -23,10 +23,8 @@ interface HookEntry {
 
 const LEVEL_ICONS: Record<number, string> = {
   1: "🟢",
-  2: "🔵",
-  3: "🟡",
-  4: "🟠",
-  5: "🔴",
+  2: "🟡",
+  3: "🔴",
 };
 
 function truncateCommand(command: string): string {
@@ -39,10 +37,10 @@ function truncateCommand(command: string): string {
 function getBackgroundColor(
   level: number
 ): vscode.ThemeColor | undefined {
-  if (level >= 4) {
+  if (level >= 3) {
     return new vscode.ThemeColor("statusBarItem.errorBackground");
   }
-  if (level === 3) {
+  if (level === 2) {
     return new vscode.ThemeColor("statusBarItem.warningBackground");
   }
   return undefined;
@@ -214,8 +212,8 @@ function readAndUpdateState(): void {
 
     updateStatusBar(state);
 
-    // Warning notification for Lv.4+
-    if (state.level >= 4) {
+    // Warning notification for Lv.3 (dangerous)
+    if (state.level >= 3) {
       vscode.window.showWarningMessage(
         `⚠️ Danger Lv.${state.level}: ${state.command}`
       );

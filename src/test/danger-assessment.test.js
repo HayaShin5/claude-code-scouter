@@ -3,61 +3,59 @@ const assert = require("node:assert/strict");
 const { assessDanger } = require("../../resources/claude-danger-indicator.js");
 
 describe("assessDanger", () => {
-  // Lv.5: Broad/irreversible/privilege escalation
-  it("sudo → Lv.5", () => {
-    assert.equal(assessDanger("sudo apt-get update").level, 5);
+  // Lv.3: Dangerous (external, destructive, privilege escalation)
+  it("sudo → Lv.3", () => {
+    assert.equal(assessDanger("sudo apt-get update").level, 3);
   });
-  it("rm -rf → Lv.5", () => {
-    assert.equal(assessDanger("rm -rf /tmp/data").level, 5);
+  it("rm -rf → Lv.3", () => {
+    assert.equal(assessDanger("rm -rf /tmp/data").level, 3);
   });
-  it("git push --force → Lv.5", () => {
-    assert.equal(assessDanger("git push --force origin main").level, 5);
+  it("git push --force → Lv.3", () => {
+    assert.equal(assessDanger("git push --force origin main").level, 3);
   });
-  it("DROP TABLE → Lv.5", () => {
-    assert.equal(assessDanger("DROP TABLE users").level, 5);
+  it("DROP TABLE → Lv.3", () => {
+    assert.equal(assessDanger("DROP TABLE users").level, 3);
   });
-  it("chmod 777 → Lv.5", () => {
-    assert.equal(assessDanger("chmod 777 /var/www").level, 5);
+  it("chmod 777 → Lv.3", () => {
+    assert.equal(assessDanger("chmod 777 /var/www").level, 3);
   });
-  it("dd → Lv.5", () => {
-    assert.equal(assessDanger("dd if=/dev/zero of=/dev/sda").level, 5);
+  it("dd → Lv.3", () => {
+    assert.equal(assessDanger("dd if=/dev/zero of=/dev/sda").level, 3);
   });
-
-  // Lv.4: External communication
-  it("git push → Lv.4", () => {
-    assert.equal(assessDanger("git push origin main").level, 4);
+  it("git push → Lv.3", () => {
+    assert.equal(assessDanger("git push origin main").level, 3);
   });
-  it("curl -X POST → Lv.4", () => {
-    assert.equal(assessDanger("curl -X POST https://api.example.com").level, 4);
+  it("curl -X POST → Lv.3", () => {
+    assert.equal(assessDanger("curl -X POST https://api.example.com").level, 3);
   });
-  it("npm publish → Lv.4", () => {
-    assert.equal(assessDanger("npm publish").level, 4);
+  it("npm publish → Lv.3", () => {
+    assert.equal(assessDanger("npm publish").level, 3);
   });
-  it("gh pr create → Lv.4", () => {
-    assert.equal(assessDanger("gh pr create --title test").level, 4);
+  it("gh pr create → Lv.3", () => {
+    assert.equal(assessDanger("gh pr create --title test").level, 3);
   });
-  it("ssh → Lv.4", () => {
-    assert.equal(assessDanger("ssh user@host").level, 4);
+  it("ssh → Lv.3", () => {
+    assert.equal(assessDanger("ssh user@host").level, 3);
   });
 
-  // Lv.3: Local irreversible / process ops
-  it("rm (simple) → Lv.3", () => {
-    assert.equal(assessDanger("rm temp.log").level, 3);
+  // Lv.2: Caution (local irreversible, process ops)
+  it("rm (simple) → Lv.2", () => {
+    assert.equal(assessDanger("rm temp.log").level, 2);
   });
-  it("kill → Lv.3", () => {
-    assert.equal(assessDanger("kill 1234").level, 3);
+  it("kill → Lv.2", () => {
+    assert.equal(assessDanger("kill 1234").level, 2);
   });
-  it("npm install → Lv.3", () => {
-    assert.equal(assessDanger("npm install express").level, 3);
+  it("npm install → Lv.2", () => {
+    assert.equal(assessDanger("npm install express").level, 2);
   });
-  it("git reset → Lv.3", () => {
-    assert.equal(assessDanger("git reset HEAD~1").level, 3);
+  it("git reset → Lv.2", () => {
+    assert.equal(assessDanger("git reset HEAD~1").level, 2);
   });
-  it("brew install → Lv.3", () => {
-    assert.equal(assessDanger("brew install jq").level, 3);
+  it("brew install → Lv.2", () => {
+    assert.equal(assessDanger("brew install jq").level, 2);
   });
 
-  // Lv.1: Read-only
+  // Lv.1: Safe (read-only)
   it("cat → Lv.1", () => {
     assert.equal(assessDanger("cat README.md").level, 1);
   });
@@ -86,11 +84,11 @@ describe("assessDanger", () => {
   });
 
   // Priority: higher level wins
-  it("rm -rf prioritized over rm (Lv.5 > Lv.3)", () => {
-    assert.equal(assessDanger("rm -rf /tmp").level, 5);
+  it("rm -rf prioritized over rm (Lv.3 > Lv.2)", () => {
+    assert.equal(assessDanger("rm -rf /tmp").level, 3);
   });
-  it("git push --force prioritized over git push (Lv.5 > Lv.4)", () => {
-    assert.equal(assessDanger("git push --force").level, 5);
+  it("git push --force prioritized over git push (both Lv.3)", () => {
+    assert.equal(assessDanger("git push --force").level, 3);
   });
 
   // matchedPattern is recorded

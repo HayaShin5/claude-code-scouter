@@ -4,20 +4,18 @@ VSCode extension that shows the danger level of Bash commands Claude Code asks t
 
 ## Features
 
-- **5-level danger assessment** — Commands are classified from Lv.1 (safe, read-only) to Lv.5 (destructive, privilege escalation)
+- **3-level danger assessment** — Commands are classified as Safe, Caution, or Dangerous
 - **Status bar indicator** — Color-coded danger level displayed in the status bar
-- **Warning notifications** — Automatic alerts for Lv.4+ commands
+- **Warning notifications** — Automatic alerts for dangerous commands
 - **Click for details** — Click the status bar item to see the full command and matched pattern
 
 ### Danger Levels
 
 | Lv | Color | Definition | Examples |
 |----|-------|------------|----------|
-| 1 | 🟢 | Read-only, no side effects | `cat`, `ls`, `grep`, `git status` |
-| 2 | 🔵 | Reversible local changes / unknown | `git add`, `mkdir`, `cp` |
-| 3 | 🟡 | Irreversible local changes | `rm`, `kill`, `npm install` |
-| 4 | 🟠 | External communication | `git push`, `curl -X POST`, `ssh` |
-| 5 | 🔴 | Broad/irreversible/privilege escalation | `sudo`, `rm -rf`, `--force` |
+| 1 | 🟢 | Safe (read-only, no side effects) | `cat`, `ls`, `grep`, `git status` |
+| 2 | 🟡 | Caution (local changes, process ops) | `rm`, `kill`, `npm install` |
+| 3 | 🔴 | Dangerous (external, destructive, privilege escalation) | `sudo`, `rm -rf`, `git push`, `ssh` |
 
 ## How It Works
 

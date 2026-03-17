@@ -2,12 +2,14 @@
 "use strict";
 
 const fs = require("fs");
-const path = require("path");
 
 const STATE_FILE = "/tmp/claude-danger-state.json";
 
+// Lv.3: Dangerous (external communication, destructive, privilege escalation)
+// Lv.2: Caution (local irreversible changes, process ops)
+// Lv.1: Safe (read-only, no side effects)
 const patterns = {
-  5: [
+  3: [
     { regex: /\bsudo\b/, desc: "sudo" },
     { regex: /\brm\s+(-\w*)?r\w*f/, desc: "rm -rf" },
     { regex: /--force\b/, desc: "--force" },
@@ -16,8 +18,6 @@ const patterns = {
     { regex: /\bchmod\s+777\b/, desc: "chmod 777" },
     { regex: /\bmkfs\b/, desc: "mkfs" },
     { regex: /\bdd\s+/, desc: "dd" },
-  ],
-  4: [
     { regex: /\bgit\s+push\b/, desc: "git push" },
     { regex: /\bcurl\b.*-X\s*(POST|PUT|DELETE|PATCH)/i, desc: "curl with mutating method" },
     { regex: /\bwget\b/, desc: "wget" },
@@ -26,7 +26,7 @@ const patterns = {
     { regex: /\bnpm\s+publish\b/, desc: "npm publish" },
     { regex: /\bdocker\s+push\b/, desc: "docker push" },
   ],
-  3: [
+  2: [
     { regex: /\brm\b/, desc: "rm" },
     { regex: /\bkill\b/, desc: "kill" },
     { regex: /\bnpm\s+install\b/, desc: "npm install" },
@@ -50,7 +50,7 @@ const patterns = {
 
 function assessDanger(command) {
   // Evaluate from highest to lowest level
-  for (const level of [5, 4, 3, 1]) {
+  for (const level of [3, 2, 1]) {
     for (const pattern of patterns[level]) {
       if (pattern.regex.test(command)) {
         return { level, matchedPattern: pattern.desc };
