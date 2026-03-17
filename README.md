@@ -52,6 +52,3 @@ Unknown commands default to **Lv.3** (Caution) so they don't slip through unnoti
 ## License
 
 [MIT](LICENSE)
-
-
-hello
