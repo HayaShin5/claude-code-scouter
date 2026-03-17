@@ -5,6 +5,12 @@
 ![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/HayaShin5.claude-code-scouter)
 ![License](https://img.shields.io/github/license/HayaShin5/claude-code-scouter)
 
+## Demo
+
+<p align="center">
+  <img src="https://github.com/HayaShin5/claude-code-scouter/releases/download/v0.0.1/demo-claude-code-scouter.mp4" alt="Demo" width="600">
+</p>
+
 ## Why?
 
 **Don't know what a command does? Now you don't have to.** This extension tells you whether to approve or think twice — before you click Yes.
