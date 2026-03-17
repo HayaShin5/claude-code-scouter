@@ -3,7 +3,7 @@
   "displayName": "Claude Danger Indicator",
   "description": "Shows danger level of commands Claude Code asks to execute",
   "version": "0.0.1",
-  "publisher": "hashi",
+  "publisher": "HayaShin",
   "engines": {
     "vscode": "^1.85.0"
   },
