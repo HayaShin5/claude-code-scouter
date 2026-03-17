@@ -30,10 +30,11 @@ const LEVEL_ICONS: Record<number, string> = {
 };
 
 function truncateCommand(command: string): string {
-  if (command.length <= COMMAND_MAX_LENGTH) {
-    return command;
+  const oneLine = command.replace(/[\r\n]+/g, " ").trim();
+  if (oneLine.length <= COMMAND_MAX_LENGTH) {
+    return oneLine;
   }
-  return command.slice(0, COMMAND_MAX_LENGTH) + "...";
+  return oneLine.slice(0, COMMAND_MAX_LENGTH) + "...";
 }
 
 function getBackgroundColor(
