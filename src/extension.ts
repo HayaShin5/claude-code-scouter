@@ -11,6 +11,7 @@ interface DangerState {
   level: number;
   command: string;
   matchedPattern: string | null;
+  summary: string | null;
   timestamp: number;
 }
 
@@ -187,9 +188,10 @@ let lastState: DangerState | null = null;
 function updateStatusBar(state: DangerState): void {
   const icon = LEVEL_ICONS[state.level] || "⚪";
   const cmdDisplay = truncateCommand(state.command);
+  const summaryText = state.summary ? ` - ${state.summary}` : "";
   statusBarItem.text = `${icon} Lv.${state.level} ${cmdDisplay}`;
   statusBarItem.backgroundColor = getBackgroundColor(state.level);
-  statusBarItem.tooltip = "Click to show details";
+  statusBarItem.tooltip = `${state.matchedPattern || "unknown"}${summaryText}\n\nClick for details`;
   lastState = state;
 }
 
@@ -214,8 +216,9 @@ function readAndUpdateState(): void {
 
     // Warning notification for Lv.3 (dangerous)
     if (state.level >= 3) {
+      const warn = state.summary || state.matchedPattern || "";
       vscode.window.showWarningMessage(
-        `⚠️ Danger Lv.${state.level}: ${state.command}`
+        `⚠️ Lv.${state.level} ${warn}: ${state.command}`
       );
     }
   } catch {
@@ -267,13 +270,15 @@ function showDetails(): void {
     return;
   }
 
-  const reason =
+  const pattern =
     lastState.matchedPattern !== null
-      ? `Matched pattern: ${lastState.matchedPattern}`
-      : "No known pattern matched (default level)";
+      ? lastState.matchedPattern
+      : "unknown";
+
+  const summary = lastState.summary || "不明なコマンド（副作用の可能性あり）";
 
   vscode.window.showInformationMessage(
-    `Danger Lv.${lastState.level}\n\nCommand: ${lastState.command}\n\nReason: ${reason}`
+    `Lv.${lastState.level} [${pattern}] ${summary}\n\nCommand: ${lastState.command}`
   );
 }
 
