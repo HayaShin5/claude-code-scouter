@@ -8,7 +8,7 @@
 ## Demo
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/HayaShin5/claude-code-scouter/main/src/assets/demo.gif?v=2" alt="Demo">
+  <img src="https://github.com/HayaShin5/claude-code-scouter/releases/download/v0.0.1/demo-scouter.gif" alt="Demo">
 </p>
 
 ## Why?
