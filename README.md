@@ -1,31 +1,61 @@
 # Claude Code Scouter
 
-VSCode extension that scans and displays the danger level of commands Claude Code asks to execute.
+> Like a Dragon Ball scouter — instantly measure the "power level" of every command Claude Code wants to run.
+
+![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/HayaShin5.claude-code-scouter)
+![License](https://img.shields.io/github/license/HayaShin5/claude-code-scouter)
+
+## Why?
+
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code) is a powerful AI coding assistant that runs Bash commands on your machine. Before each command, it asks for your approval — but **`ls` and `rm -rf /` look the same in the permission prompt**.
+
+If you're not deeply familiar with every command, it's hard to know:
+- Is this command safe to approve?
+- Will it modify my files? Delete something?
+- Does it send data to an external server?
+
+**Claude Code Scouter** solves this by showing a real-time danger assessment in your VSCode status bar — color-coded, with a plain-English explanation of what the command does.
 
 ## Features
 
-- **4-level danger assessment** — Commands classified by impact: Safe, Low, Caution, Danger
-- **Status bar indicator** — Color-coded danger level displayed in the status bar
-- **Warning notifications** — Automatic alerts for dangerous commands (Lv.4)
-- **Click for details** — Click the status bar item to see the full command and what it does
+### 4-Level Danger Assessment
 
-### Danger Levels
+Every command is scanned and classified by its real-world impact:
 
-| Lv | Icon | Background | Definition | Examples |
-|----|------|-----------|------------|----------|
-| 1 | 🟢 | — | Safe (read-only, no side effects) | `cat`, `ls`, `grep`, `git status` |
-| 2 | 🔵 | — | Low (local writes, easily reversible) | `git add`, `mkdir`, `cp`, `npm install` |
-| 3 | 🟡 | Warning | Caution (destructive local ops, process control) | `rm`, `kill`, `git reset`, `make` |
-| 4 | 🔴 | Error | Danger (external, irreversible, privilege escalation) | `sudo`, `rm -rf`, `git push`, `curl` |
+| Lv | Icon | Status Bar | Meaning | Examples |
+|----|------|-----------|---------|----------|
+| 1 | 🟢 | Normal | **Safe** — Just reading, no changes | `cat`, `ls`, `grep`, `git status` |
+| 2 | 🔵 | Normal | **Low** — Makes local changes, easy to undo | `git add`, `mkdir`, `cp`, `npm install` |
+| 3 | 🟡 | ⚠️ Yellow | **Caution** — Could delete files or run arbitrary code | `rm`, `kill`, `git reset`, `make` |
+| 4 | 🔴 | 🚨 Red | **Danger** — Sends data externally, irreversible, or needs admin rights | `sudo`, `rm -rf`, `git push`, `curl` |
 
-Unknown commands default to **Lv.3** (Caution) to flag them for review.
+Unknown commands default to **Lv.3** (Caution) so they don't slip through unnoticed.
+
+### What You See
+
+- **Status bar** — Always-visible indicator at the bottom of VSCode showing the danger level + command summary
+- **Hover tooltip** — Shows what the command does in plain English (e.g., "Delete files", "Push code to remote repository")
+- **Warning popup** — Automatic notification for Lv.4 commands so you never accidentally approve something dangerous
+- **Click for details** — Click the status bar item for full command text and the matched pattern
 
 ## How It Works
 
-1. On activation, the extension registers a [Claude Code hook](https://docs.anthropic.com/en/docs/claude-code/hooks) (`PreToolUse`) that runs before every Bash command
-2. The hook script evaluates the command against regex patterns and writes the result to a temp file
-3. The extension watches the file and updates the status bar in real time
+1. On activation, the extension automatically registers a [Claude Code hook](https://docs.anthropic.com/en/docs/claude-code/hooks) (`PreToolUse`)
+2. Before every Bash command, the hook script scans the command against 80+ regex patterns
+3. The result (level + summary) is written to a temp file
+4. The extension watches the file and updates the status bar in real time
+
+**Zero configuration required** — install and it just works. On uninstall, everything is cleaned up automatically.
 
 ## Requirements
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and available in your terminal
+- VSCode 1.85.0 or later
+
+## Related
+
+- [Claude Code Ninja](https://marketplace.visualstudio.com/items?itemName=HayaShin5.claude-code-ninja) — More Claude Code productivity tools
+
+## License
+
+[MIT](LICENSE)
