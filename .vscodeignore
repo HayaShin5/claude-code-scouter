@@ -9,3 +9,4 @@ openspec/**
 plan.md
 tsconfig.json
 .gitignore
+images/**
