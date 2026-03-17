@@ -5,11 +5,12 @@ const fs = require("fs");
 
 const STATE_FILE = "/tmp/claude-danger-state.json";
 
-// Lv.3: Dangerous (external communication, destructive/irreversible, privilege escalation)
-// Lv.2: Caution (local changes, process ops, arbitrary execution)
-// Lv.1: Safe (read-only, no side effects)
+// Lv.4: Danger  — External communication, irreversible destruction, privilege escalation
+// Lv.3: Caution — Destructive local ops, process control, arbitrary execution
+// Lv.2: Low     — Local writes, easily reversible
+// Lv.1: Safe    — Read-only, no side effects
 const patterns = {
-  3: [
+  4: [
     // Privilege escalation
     { regex: /\bsudo\b/, desc: "sudo", summary: "Run command as superuser" },
 
@@ -17,7 +18,6 @@ const patterns = {
     { regex: /\brm\s+.*-\w*r\w*f/, desc: "rm -rf", summary: "Recursively force-delete files" },
     { regex: /\brm\s+.*-\w*f\w*r/, desc: "rm -fr", summary: "Recursively force-delete files" },
     { regex: /\bshred\b/, desc: "shred", summary: "Irrecoverably destroy file data" },
-    { regex: /\btruncate\b/, desc: "truncate", summary: "Truncate file contents" },
 
     // Dangerous system ops
     { regex: /\bchmod\s+777\b/, desc: "chmod 777", summary: "Grant full permissions to all users" },
@@ -39,7 +39,6 @@ const patterns = {
 
     // Git dangerous
     { regex: /\bgit\s+push\b/, desc: "git push", summary: "Push code to remote repository" },
-    { regex: /\bgit\s+push\s+.*--force\b/, desc: "git push --force", summary: "Force-overwrite remote history" },
 
     // Network / external communication
     { regex: /\bcurl\b/, desc: "curl", summary: "Send HTTP request to external URL" },
@@ -68,13 +67,12 @@ const patterns = {
     // Pipe to shell (remote code execution)
     { regex: /\|\s*(sh|bash|zsh)\b/, desc: "pipe to shell", summary: "Pipe external code into shell" },
   ],
-  2: [
-    // File modifications
+  3: [
+    // Destructive file ops
     { regex: /\brm\b/, desc: "rm", summary: "Delete files" },
-    { regex: /\bmv\b/, desc: "mv", summary: "Move/rename files" },
-    { regex: /\bcp\b/, desc: "cp", summary: "Copy files (may overwrite)" },
-    { regex: /\bln\b/, desc: "ln", summary: "Create link" },
-    { regex: /\btee\b/, desc: "tee", summary: "Write output to file" },
+    { regex: /\btruncate\b/, desc: "truncate", summary: "Truncate file contents" },
+
+    // In-place edits
     { regex: /\bsed\s+.*-i\b/, desc: "sed -i", summary: "Edit file in-place" },
     { regex: /\bchmod\b/, desc: "chmod", summary: "Change file permissions" },
     { regex: /\bchown\b/, desc: "chown", summary: "Change file ownership" },
@@ -85,31 +83,16 @@ const patterns = {
     { regex: /\bkillall\b/, desc: "killall", summary: "Terminate all processes by name" },
     { regex: /\bnohup\b/, desc: "nohup", summary: "Run persistently in background" },
 
-    // Package installation
-    { regex: /\bnpm\s+install\b/, desc: "npm install", summary: "Install npm packages" },
-    { regex: /\bnpm\s+run\b/, desc: "npm run", summary: "Run package.json script" },
-    { regex: /\byarn\b/, desc: "yarn", summary: "Yarn package operation" },
-    { regex: /\bpip\s+install\b/, desc: "pip install", summary: "Install Python packages" },
-    { regex: /\bbrew\s+install\b/, desc: "brew install", summary: "Install Homebrew packages" },
-
-    // Build tools
-    { regex: /\bmake\b/, desc: "make", summary: "Run Makefile target" },
-
-    // Git local modifications
+    // Git hard-to-reverse
     { regex: /\bgit\s+reset\b/, desc: "git reset", summary: "Reset commit history" },
     { regex: /\bgit\s+checkout\b.*--/, desc: "git checkout --", summary: "Discard file changes" },
     { regex: /\bgit\s+clean\b/, desc: "git clean", summary: "Remove untracked files" },
-    { regex: /\bgit\s+stash\b/, desc: "git stash", summary: "Stash working changes" },
-    { regex: /\bgit\s+commit\b/, desc: "git commit", summary: "Commit changes" },
     { regex: /\bgit\s+rebase\b/, desc: "git rebase", summary: "Rewrite commit history" },
-    { regex: /\bgit\s+merge\b/, desc: "git merge", summary: "Merge branches" },
     { regex: /\bgit\s+restore\b/, desc: "git restore", summary: "Restore/discard file changes" },
 
-    // Archive extraction
-    { regex: /\btar\s+.*x/, desc: "tar extract", summary: "Extract archive (may overwrite)" },
-    { regex: /\bunzip\b/, desc: "unzip", summary: "Extract ZIP (may overwrite)" },
-
-    // Arbitrary code execution (inline)
+    // Arbitrary code execution
+    { regex: /\bnpm\s+run\b/, desc: "npm run", summary: "Run package.json script" },
+    { regex: /\bmake\b/, desc: "make", summary: "Run Makefile target" },
     { regex: /\b(node|python|ruby)\s+-e\b/, desc: "inline eval", summary: "Execute inline code (opaque)" },
 
     // Dangerous find variants
@@ -120,8 +103,38 @@ const patterns = {
     // Amplifier
     { regex: /\bxargs\b/, desc: "xargs", summary: "Batch-execute command with input args" },
 
-    // Docker local ops
+    // Docker local control
     { regex: /\bdocker\s+stop\b/, desc: "docker stop", summary: "Stop container" },
+  ],
+  2: [
+    // File modifications (reversible)
+    { regex: /\bmv\b/, desc: "mv", summary: "Move/rename files" },
+    { regex: /\bcp\b/, desc: "cp", summary: "Copy files (may overwrite)" },
+    { regex: /\bln\b/, desc: "ln", summary: "Create link" },
+    { regex: /\btee\b/, desc: "tee", summary: "Write output to file" },
+    { regex: /^\s*mkdir\b/, desc: "mkdir", summary: "Create directory" },
+    { regex: /^\s*touch\b/, desc: "touch", summary: "Create/update file timestamp" },
+
+    // Package installation
+    { regex: /\bnpm\s+install\b/, desc: "npm install", summary: "Install npm packages" },
+    { regex: /\byarn\b/, desc: "yarn", summary: "Yarn package operation" },
+    { regex: /\bpip\s+install\b/, desc: "pip install", summary: "Install Python packages" },
+    { regex: /\bbrew\s+install\b/, desc: "brew install", summary: "Install Homebrew packages" },
+
+    // Git local safe writes
+    { regex: /^\s*git\s+add\b/, desc: "git add", summary: "Stage files for commit" },
+    { regex: /\bgit\s+commit\b/, desc: "git commit", summary: "Commit changes" },
+    { regex: /\bgit\s+stash\b/, desc: "git stash", summary: "Stash working changes" },
+    { regex: /\bgit\s+merge\b/, desc: "git merge", summary: "Merge branches" },
+    { regex: /^\s*git\s+switch\b/, desc: "git switch", summary: "Switch branches" },
+    { regex: /^\s*git\s+fetch\b/, desc: "git fetch", summary: "Download from remote (no merge)" },
+    { regex: /^\s*git\s+clone\b/, desc: "git clone", summary: "Clone repository" },
+    { regex: /^\s*git\s+pull\b/, desc: "git pull", summary: "Pull and merge from remote" },
+    { regex: /^\s*git\s+checkout\b/, desc: "git checkout", summary: "Switch branches/restore files" },
+
+    // Archive extraction
+    { regex: /\btar\s+.*x/, desc: "tar extract", summary: "Extract archive (may overwrite)" },
+    { regex: /\bunzip\b/, desc: "unzip", summary: "Extract ZIP (may overwrite)" },
 
     // Local rsync
     { regex: /\brsync\b/, desc: "rsync (local)", summary: "Sync files locally" },
@@ -142,12 +155,19 @@ const patterns = {
     // Text processing
     { regex: /^\s*(wc|sort|uniq|cut|tr|column|fold)\b/, desc: "text processing", summary: "Process/transform text" },
     { regex: /^\s*(diff|comm|cmp)\b/, desc: "diff/compare", summary: "Compare files" },
+    { regex: /^\s*(sed|awk|perl)\b/, desc: "text transform", summary: "Transform text (stdout)" },
 
-    // Find (without -exec/-delete, checked after Lv.2 patterns)
+    // Find (without -exec/-delete)
     { regex: /^\s*find\b/, desc: "find", summary: "Search for files" },
+
+    // Path utilities
+    { regex: /^\s*(basename|dirname|realpath|readlink)\b/, desc: "path utility", summary: "Resolve/extract path" },
 
     // Git read-only
     { regex: /^\s*git\s+(status|log|diff|show|branch|tag|remote|stash\s+list)\b/, desc: "git read", summary: "Show Git status/history" },
+
+    // GitHub CLI read-only
+    { regex: /^\s*gh\s+(pr|issue)\s+(list|view|status)/, desc: "gh read", summary: "View GitHub PR/issue" },
 
     // Data processing
     { regex: /^\s*(jq|yq)\b/, desc: "data query", summary: "Query JSON/YAML data" },
@@ -158,24 +178,29 @@ const patterns = {
     { regex: /--help\b/, desc: "--help", summary: "Show command help" },
 
     // Docker read-only
-    { regex: /^\s*docker\s+(ps|images|logs|inspect)\b/, desc: "docker read", summary: "Show Docker status" },
+    { regex: /^\s*docker\s+(ps|images|logs|inspect|stats|info|version)\b/, desc: "docker read", summary: "Show Docker status" },
 
     // Test/conditionals
     { regex: /^\s*(test|\[)\b/, desc: "test/conditional", summary: "Evaluate condition" },
+
+    // Shell basics
+    { regex: /^\s*(cd|pushd|popd)\b/, desc: "cd", summary: "Change directory" },
+    { regex: /^\s*(export|alias|unalias)\b/, desc: "shell config", summary: "Set shell variable/alias" },
+    { regex: /^\s*(true|false|exit|return)\b/, desc: "shell builtin", summary: "Shell control flow" },
+    { regex: /^\s*(clear|tput|reset)\b/, desc: "terminal", summary: "Terminal control" },
   ],
 };
 
 function assessDanger(command) {
-  // Evaluate from highest to lowest level
-  for (const level of [3, 2, 1]) {
+  for (const level of [4, 3, 2, 1]) {
     for (const pattern of patterns[level]) {
       if (pattern.regex.test(command)) {
         return { level, matchedPattern: pattern.desc, summary: pattern.summary };
       }
     }
   }
-  // Default: Lv.2 (unknown command, assume possible side effects)
-  return { level: 2, matchedPattern: null, summary: "Unknown command (possible side effects)" };
+  // Default: Lv.3 (unknown command — flag for review)
+  return { level: 3, matchedPattern: null, summary: "Unknown command (possible side effects)" };
 }
 
 // Main: read hook input from stdin, assess, write state
@@ -209,7 +234,6 @@ async function main() {
   fs.writeFileSync(STATE_FILE, JSON.stringify(state));
 }
 
-// Run main only when executed directly (not when required for testing)
 if (require.main === module) {
   main().catch(() => process.exit(0));
 }

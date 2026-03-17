@@ -4,18 +4,21 @@ VSCode extension that shows the danger level of Bash commands Claude Code asks t
 
 ## Features
 
-- **3-level danger assessment** — Commands are classified as Safe, Caution, or Dangerous
+- **4-level danger assessment** — Commands classified by impact: Safe, Low, Caution, Danger
 - **Status bar indicator** — Color-coded danger level displayed in the status bar
-- **Warning notifications** — Automatic alerts for dangerous commands
-- **Click for details** — Click the status bar item to see the full command and matched pattern
+- **Warning notifications** — Automatic alerts for dangerous commands (Lv.4)
+- **Click for details** — Click the status bar item to see the full command and what it does
 
 ### Danger Levels
 
-| Lv | Color | Definition | Examples |
-|----|-------|------------|----------|
-| 1 | 🟢 | Safe (read-only, no side effects) | `cat`, `ls`, `grep`, `git status` |
-| 2 | 🟡 | Caution (local changes, process ops) | `rm`, `kill`, `npm install` |
-| 3 | 🔴 | Dangerous (external, destructive, privilege escalation) | `sudo`, `rm -rf`, `git push`, `ssh` |
+| Lv | Icon | Background | Definition | Examples |
+|----|------|-----------|------------|----------|
+| 1 | 🟢 | — | Safe (read-only, no side effects) | `cat`, `ls`, `grep`, `git status` |
+| 2 | 🔵 | — | Low (local writes, easily reversible) | `git add`, `mkdir`, `cp`, `npm install` |
+| 3 | 🟡 | Warning | Caution (destructive local ops, process control) | `rm`, `kill`, `git reset`, `make` |
+| 4 | 🔴 | Error | Danger (external, irreversible, privilege escalation) | `sudo`, `rm -rf`, `git push`, `curl` |
+
+Unknown commands default to **Lv.3** (Caution) to flag them for review.
 
 ## How It Works
 
