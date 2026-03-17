@@ -1,6 +1,6 @@
-# Claude Danger Indicator
+# Claude Code Scouter
 
-VSCode extension that shows the danger level of Bash commands Claude Code asks to execute.
+VSCode extension that scans and displays the danger level of commands Claude Code asks to execute.
 
 ## Features
 

@@ -4,7 +4,7 @@ import * as path from "path";
 import * as os from "os";
 
 const STATE_FILE = "/tmp/claude-danger-state.json";
-const HOOK_SCRIPT_NAME = "claude-danger-indicator.js";
+const HOOK_SCRIPT_NAME = "claude-code-scouter.js";
 const COMMAND_MAX_LENGTH = 50;
 
 interface DangerState {
@@ -291,13 +291,13 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.StatusBarAlignment.Left,
     100
   );
-  statusBarItem.command = "claude-danger-indicator.showDetails";
+  statusBarItem.command = "claude-code-scouter.showDetails";
   statusBarItem.show();
   context.subscriptions.push(statusBarItem);
 
   // Register command
   const cmd = vscode.commands.registerCommand(
-    "claude-danger-indicator.showDetails",
+    "claude-code-scouter.showDetails",
     showDetails
   );
   context.subscriptions.push(cmd);
