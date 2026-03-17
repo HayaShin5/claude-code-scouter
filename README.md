@@ -7,14 +7,7 @@
 
 ## Why?
 
-[Claude Code](https://docs.anthropic.com/en/docs/claude-code) is a powerful AI coding assistant that runs Bash commands on your machine. Before each command, it asks for your approval — but **`ls` and `rm -rf /` look the same in the permission prompt**.
-
-If you're not deeply familiar with every command, it's hard to know:
-- Is this command safe to approve?
-- Will it modify my files? Delete something?
-- Does it send data to an external server?
-
-**Claude Code Scouter** solves this by showing a real-time danger assessment in your VSCode status bar — color-coded, with a plain-English explanation of what the command does.
+**Don't know what a command does? Now you don't have to.** This extension tells you whether to approve or think twice — before you click Yes.
 
 ## Features
 
