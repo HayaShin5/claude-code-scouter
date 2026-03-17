@@ -43,12 +43,3 @@ Unknown commands default to **Lv.3** (Caution) so they don't slip through unnoti
 ## Requirements
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and available in your terminal
-- VSCode 1.85.0 or later
-
-## Related
-
-- [Claude Code Ninja](https://marketplace.visualstudio.com/items?itemName=HayaShin5.claude-code-ninja) — More Claude Code productivity tools
-
-## License
-
-[MIT](LICENSE)
