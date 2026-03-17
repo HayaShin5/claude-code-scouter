@@ -1,6 +1,6 @@
 const { describe, it } = require("node:test");
 const assert = require("node:assert/strict");
-const { assessDanger } = require("../hook/claude-danger-indicator.js");
+const { assessDanger } = require("../../resources/claude-danger-indicator.js");
 
 describe("assessDanger", () => {
   // Lv.5: Broad/irreversible/privilege escalation

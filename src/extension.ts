@@ -151,8 +151,7 @@ function unregisterHook(): void {
 function deployHookScript(context: vscode.ExtensionContext): void {
   const source = path.join(
     context.extensionPath,
-    "src",
-    "hook",
+    "resources",
     HOOK_SCRIPT_NAME
   );
   const dest = getHookScriptPath();
