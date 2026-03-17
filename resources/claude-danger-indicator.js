@@ -11,157 +11,157 @@ const STATE_FILE = "/tmp/claude-danger-state.json";
 const patterns = {
   3: [
     // Privilege escalation
-    { regex: /\bsudo\b/, desc: "sudo", summary: "管理者権限でコマンドを実行" },
+    { regex: /\bsudo\b/, desc: "sudo", summary: "Run command as superuser" },
 
     // Destructive file operations
-    { regex: /\brm\s+.*-\w*r\w*f/, desc: "rm -rf", summary: "ファイルを再帰的に強制削除" },
-    { regex: /\brm\s+.*-\w*f\w*r/, desc: "rm -fr", summary: "ファイルを再帰的に強制削除" },
-    { regex: /\bshred\b/, desc: "shred", summary: "ファイルを復元不能に破壊" },
-    { regex: /\btruncate\b/, desc: "truncate", summary: "ファイルの内容を切り詰め" },
+    { regex: /\brm\s+.*-\w*r\w*f/, desc: "rm -rf", summary: "Recursively force-delete files" },
+    { regex: /\brm\s+.*-\w*f\w*r/, desc: "rm -fr", summary: "Recursively force-delete files" },
+    { regex: /\bshred\b/, desc: "shred", summary: "Irrecoverably destroy file data" },
+    { regex: /\btruncate\b/, desc: "truncate", summary: "Truncate file contents" },
 
     // Dangerous system ops
-    { regex: /\bchmod\s+777\b/, desc: "chmod 777", summary: "全ユーザーにフル権限を付与" },
-    { regex: /\bmkfs\b/, desc: "mkfs", summary: "ファイルシステムを作成（ディスク初期化）" },
-    { regex: /\bdd\s+/, desc: "dd", summary: "ディスク/デバイスへの低レベル書き込み" },
-    { regex: />\s*\/dev\//, desc: "write to /dev/", summary: "デバイスファイルへ直接書き込み" },
-    { regex: /\breboot\b/, desc: "reboot", summary: "システムを再起動" },
-    { regex: /\bshutdown\b/, desc: "shutdown", summary: "システムをシャットダウン" },
-    { regex: /\bhalt\b/, desc: "halt", summary: "システムを停止" },
-    { regex: /\bcrontab\b/, desc: "crontab", summary: "定期実行タスクを変更" },
-    { regex: /\bchroot\b/, desc: "chroot", summary: "ルートディレクトリを変更" },
-    { regex: /\b(mount|umount)\b/, desc: "mount/umount", summary: "ファイルシステムのマウント操作" },
-    { regex: /\b(systemctl|launchctl)\b/, desc: "service management", summary: "システムサービスを操作" },
-    { regex: /\b(iptables|ufw)\b/, desc: "firewall", summary: "ファイアウォール設定を変更" },
+    { regex: /\bchmod\s+777\b/, desc: "chmod 777", summary: "Grant full permissions to all users" },
+    { regex: /\bmkfs\b/, desc: "mkfs", summary: "Create filesystem (formats disk)" },
+    { regex: /\bdd\s+/, desc: "dd", summary: "Low-level disk/device write" },
+    { regex: />\s*\/dev\//, desc: "write to /dev/", summary: "Write directly to device file" },
+    { regex: /\breboot\b/, desc: "reboot", summary: "Reboot the system" },
+    { regex: /\bshutdown\b/, desc: "shutdown", summary: "Shut down the system" },
+    { regex: /\bhalt\b/, desc: "halt", summary: "Halt the system" },
+    { regex: /\bcrontab\b/, desc: "crontab", summary: "Modify scheduled tasks" },
+    { regex: /\bchroot\b/, desc: "chroot", summary: "Change root directory" },
+    { regex: /\b(mount|umount)\b/, desc: "mount/umount", summary: "Mount/unmount filesystem" },
+    { regex: /\b(systemctl|launchctl)\b/, desc: "service management", summary: "Manage system services" },
+    { regex: /\b(iptables|ufw)\b/, desc: "firewall", summary: "Modify firewall rules" },
 
     // SQL destructive
-    { regex: /\bDROP\b/i, desc: "DROP (SQL)", summary: "データベースのテーブル等を削除" },
-    { regex: /\bTRUNCATE\s+TABLE\b/i, desc: "TRUNCATE TABLE (SQL)", summary: "テーブルの全データを削除" },
+    { regex: /\bDROP\b/i, desc: "DROP (SQL)", summary: "Drop database table/object" },
+    { regex: /\bTRUNCATE\s+TABLE\b/i, desc: "TRUNCATE TABLE (SQL)", summary: "Delete all rows from table" },
 
     // Git dangerous
-    { regex: /\bgit\s+push\b/, desc: "git push", summary: "リモートリポジトリにコードを送信" },
-    { regex: /\bgit\s+push\s+.*--force\b/, desc: "git push --force", summary: "リモート履歴を強制上書き" },
+    { regex: /\bgit\s+push\b/, desc: "git push", summary: "Push code to remote repository" },
+    { regex: /\bgit\s+push\s+.*--force\b/, desc: "git push --force", summary: "Force-overwrite remote history" },
 
     // Network / external communication
-    { regex: /\bcurl\b/, desc: "curl", summary: "外部URLへHTTPリクエストを送信" },
-    { regex: /\bwget\b/, desc: "wget", summary: "外部URLからファイルをダウンロード" },
-    { regex: /\bscp\b/, desc: "scp", summary: "リモートサーバーとファイルを転送" },
-    { regex: /\brsync\b.*@/, desc: "rsync (remote)", summary: "リモートサーバーとファイルを同期" },
-    { regex: /^\s*ssh\s+/, desc: "ssh", summary: "リモートサーバーに接続" },
-    { regex: /\b(nc|netcat|ncat)\b/, desc: "netcat", summary: "任意のネットワーク接続を確立" },
-    { regex: /\b(telnet|ftp|sftp)\b/, desc: "telnet/ftp", summary: "リモートサーバーに接続/転送" },
+    { regex: /\bcurl\b/, desc: "curl", summary: "Send HTTP request to external URL" },
+    { regex: /\bwget\b/, desc: "wget", summary: "Download file from external URL" },
+    { regex: /\bscp\b/, desc: "scp", summary: "Transfer files to/from remote server" },
+    { regex: /\brsync\b.*@/, desc: "rsync (remote)", summary: "Sync files with remote server" },
+    { regex: /^\s*ssh\s+/, desc: "ssh", summary: "Connect to remote server" },
+    { regex: /\b(nc|netcat|ncat)\b/, desc: "netcat", summary: "Open arbitrary network connection" },
+    { regex: /\b(telnet|ftp|sftp)\b/, desc: "telnet/ftp", summary: "Connect/transfer to remote server" },
 
     // GitHub CLI mutations
-    { regex: /\bgh\s+(pr|issue)\s+(create|merge|close)/, desc: "gh pr/issue mutation", summary: "GitHubのPR/Issueを作成・変更" },
+    { regex: /\bgh\s+(pr|issue)\s+(create|merge|close)/, desc: "gh pr/issue mutation", summary: "Create/modify GitHub PR or issue" },
 
     // Package publishing
-    { regex: /\bnpm\s+publish\b/, desc: "npm publish", summary: "パッケージをnpmレジストリに公開" },
+    { regex: /\bnpm\s+publish\b/, desc: "npm publish", summary: "Publish package to npm registry" },
 
     // Docker dangerous
-    { regex: /\bdocker\s+push\b/, desc: "docker push", summary: "Dockerイメージをレジストリに送信" },
-    { regex: /\bdocker\s+run\b/, desc: "docker run", summary: "コンテナを起動（ホスト影響あり）" },
-    { regex: /\bdocker\s+exec\b/, desc: "docker exec", summary: "コンテナ内でコマンドを実行" },
-    { regex: /\bdocker\s+build\b/, desc: "docker build", summary: "Dockerイメージをビルド（任意コード実行）" },
-    { regex: /\bdocker\s+rm\b/, desc: "docker rm", summary: "コンテナを削除" },
-    { regex: /\bdocker\s+rmi\b/, desc: "docker rmi", summary: "Dockerイメージを削除" },
-    { regex: /\bdocker[-\s]compose\s+(up|down)\b/, desc: "docker-compose up/down", summary: "複数コンテナを一括起動/停止" },
+    { regex: /\bdocker\s+push\b/, desc: "docker push", summary: "Push Docker image to registry" },
+    { regex: /\bdocker\s+run\b/, desc: "docker run", summary: "Start container (may affect host)" },
+    { regex: /\bdocker\s+exec\b/, desc: "docker exec", summary: "Execute command in container" },
+    { regex: /\bdocker\s+build\b/, desc: "docker build", summary: "Build Docker image (runs arbitrary code)" },
+    { regex: /\bdocker\s+rm\b/, desc: "docker rm", summary: "Remove container" },
+    { regex: /\bdocker\s+rmi\b/, desc: "docker rmi", summary: "Remove Docker image" },
+    { regex: /\bdocker[-\s]compose\s+(up|down)\b/, desc: "docker-compose up/down", summary: "Start/stop multiple containers" },
 
     // Pipe to shell (remote code execution)
-    { regex: /\|\s*(sh|bash|zsh)\b/, desc: "pipe to shell", summary: "外部コードをシェルで直接実行" },
+    { regex: /\|\s*(sh|bash|zsh)\b/, desc: "pipe to shell", summary: "Pipe external code into shell" },
   ],
   2: [
     // File modifications
-    { regex: /\brm\b/, desc: "rm", summary: "ファイルを削除" },
-    { regex: /\bmv\b/, desc: "mv", summary: "ファイルを移動/リネーム" },
-    { regex: /\bcp\b/, desc: "cp", summary: "ファイルをコピー（上書きの可能性）" },
-    { regex: /\bln\b/, desc: "ln", summary: "リンクを作成" },
-    { regex: /\btee\b/, desc: "tee", summary: "出力をファイルに書き込み" },
-    { regex: /\bsed\s+.*-i\b/, desc: "sed -i", summary: "ファイルを直接書き換え" },
-    { regex: /\bchmod\b/, desc: "chmod", summary: "ファイル権限を変更" },
-    { regex: /\bchown\b/, desc: "chown", summary: "ファイル所有者を変更" },
+    { regex: /\brm\b/, desc: "rm", summary: "Delete files" },
+    { regex: /\bmv\b/, desc: "mv", summary: "Move/rename files" },
+    { regex: /\bcp\b/, desc: "cp", summary: "Copy files (may overwrite)" },
+    { regex: /\bln\b/, desc: "ln", summary: "Create link" },
+    { regex: /\btee\b/, desc: "tee", summary: "Write output to file" },
+    { regex: /\bsed\s+.*-i\b/, desc: "sed -i", summary: "Edit file in-place" },
+    { regex: /\bchmod\b/, desc: "chmod", summary: "Change file permissions" },
+    { regex: /\bchown\b/, desc: "chown", summary: "Change file ownership" },
 
     // Process management
-    { regex: /\bkill\b/, desc: "kill", summary: "プロセスを終了" },
-    { regex: /\bpkill\b/, desc: "pkill", summary: "名前でプロセスを終了" },
-    { regex: /\bkillall\b/, desc: "killall", summary: "名前で全プロセスを終了" },
-    { regex: /\bnohup\b/, desc: "nohup", summary: "バックグラウンドで永続実行" },
+    { regex: /\bkill\b/, desc: "kill", summary: "Terminate process" },
+    { regex: /\bpkill\b/, desc: "pkill", summary: "Terminate processes by name" },
+    { regex: /\bkillall\b/, desc: "killall", summary: "Terminate all processes by name" },
+    { regex: /\bnohup\b/, desc: "nohup", summary: "Run persistently in background" },
 
     // Package installation
-    { regex: /\bnpm\s+install\b/, desc: "npm install", summary: "npmパッケージをインストール" },
-    { regex: /\bnpm\s+run\b/, desc: "npm run", summary: "package.jsonのスクリプトを実行" },
-    { regex: /\byarn\b/, desc: "yarn", summary: "Yarnでパッケージ操作" },
-    { regex: /\bpip\s+install\b/, desc: "pip install", summary: "Pythonパッケージをインストール" },
-    { regex: /\bbrew\s+install\b/, desc: "brew install", summary: "Homebrewでパッケージをインストール" },
+    { regex: /\bnpm\s+install\b/, desc: "npm install", summary: "Install npm packages" },
+    { regex: /\bnpm\s+run\b/, desc: "npm run", summary: "Run package.json script" },
+    { regex: /\byarn\b/, desc: "yarn", summary: "Yarn package operation" },
+    { regex: /\bpip\s+install\b/, desc: "pip install", summary: "Install Python packages" },
+    { regex: /\bbrew\s+install\b/, desc: "brew install", summary: "Install Homebrew packages" },
 
     // Build tools
-    { regex: /\bmake\b/, desc: "make", summary: "Makefileのタスクを実行" },
+    { regex: /\bmake\b/, desc: "make", summary: "Run Makefile target" },
 
     // Git local modifications
-    { regex: /\bgit\s+reset\b/, desc: "git reset", summary: "コミット履歴を巻き戻し" },
-    { regex: /\bgit\s+checkout\b.*--/, desc: "git checkout --", summary: "ファイルの変更を破棄" },
-    { regex: /\bgit\s+clean\b/, desc: "git clean", summary: "未追跡ファイルを削除" },
-    { regex: /\bgit\s+stash\b/, desc: "git stash", summary: "作業中の変更を一時退避" },
-    { regex: /\bgit\s+commit\b/, desc: "git commit", summary: "変更をコミット" },
-    { regex: /\bgit\s+rebase\b/, desc: "git rebase", summary: "コミット履歴を書き換え" },
-    { regex: /\bgit\s+merge\b/, desc: "git merge", summary: "ブランチを統合" },
-    { regex: /\bgit\s+restore\b/, desc: "git restore", summary: "ファイルを復元/変更を破棄" },
+    { regex: /\bgit\s+reset\b/, desc: "git reset", summary: "Reset commit history" },
+    { regex: /\bgit\s+checkout\b.*--/, desc: "git checkout --", summary: "Discard file changes" },
+    { regex: /\bgit\s+clean\b/, desc: "git clean", summary: "Remove untracked files" },
+    { regex: /\bgit\s+stash\b/, desc: "git stash", summary: "Stash working changes" },
+    { regex: /\bgit\s+commit\b/, desc: "git commit", summary: "Commit changes" },
+    { regex: /\bgit\s+rebase\b/, desc: "git rebase", summary: "Rewrite commit history" },
+    { regex: /\bgit\s+merge\b/, desc: "git merge", summary: "Merge branches" },
+    { regex: /\bgit\s+restore\b/, desc: "git restore", summary: "Restore/discard file changes" },
 
     // Archive extraction
-    { regex: /\btar\s+.*x/, desc: "tar extract", summary: "アーカイブを展開（上書きの可能性）" },
-    { regex: /\bunzip\b/, desc: "unzip", summary: "ZIPを展開（上書きの可能性）" },
+    { regex: /\btar\s+.*x/, desc: "tar extract", summary: "Extract archive (may overwrite)" },
+    { regex: /\bunzip\b/, desc: "unzip", summary: "Extract ZIP (may overwrite)" },
 
     // Arbitrary code execution (inline)
-    { regex: /\b(node|python|ruby)\s+-e\b/, desc: "inline eval", summary: "インラインコードを実行（内容不明）" },
+    { regex: /\b(node|python|ruby)\s+-e\b/, desc: "inline eval", summary: "Execute inline code (opaque)" },
 
     // Dangerous find variants
-    { regex: /\bfind\b.*-exec\b/, desc: "find -exec", summary: "検索結果に対してコマンドを実行" },
-    { regex: /\bfind\b.*-delete\b/, desc: "find -delete", summary: "検索結果のファイルを削除" },
-    { regex: /\bfind\b.*-execdir\b/, desc: "find -execdir", summary: "検索結果のディレクトリでコマンドを実行" },
+    { regex: /\bfind\b.*-exec\b/, desc: "find -exec", summary: "Execute command on search results" },
+    { regex: /\bfind\b.*-delete\b/, desc: "find -delete", summary: "Delete matched files" },
+    { regex: /\bfind\b.*-execdir\b/, desc: "find -execdir", summary: "Execute in matched directories" },
 
     // Amplifier
-    { regex: /\bxargs\b/, desc: "xargs", summary: "入力を引数にしてコマンドを一括実行" },
+    { regex: /\bxargs\b/, desc: "xargs", summary: "Batch-execute command with input args" },
 
     // Docker local ops
-    { regex: /\bdocker\s+stop\b/, desc: "docker stop", summary: "コンテナを停止" },
+    { regex: /\bdocker\s+stop\b/, desc: "docker stop", summary: "Stop container" },
 
     // Local rsync
-    { regex: /\brsync\b/, desc: "rsync (local)", summary: "ローカルでファイルを同期" },
+    { regex: /\brsync\b/, desc: "rsync (local)", summary: "Sync files locally" },
   ],
   1: [
     // File reading
-    { regex: /^\s*(cat|head|tail|less|more|bat)\b/, desc: "read file", summary: "ファイルの内容を表示" },
-    { regex: /^\s*(ls|dir|tree)\b/, desc: "list", summary: "ディレクトリの内容を一覧表示" },
-    { regex: /^\s*(grep|rg|ag|ack)\b/, desc: "search", summary: "ファイル内のテキストを検索" },
-    { regex: /^\s*(echo|printf)\b/, desc: "echo/printf", summary: "テキストを出力" },
+    { regex: /^\s*(cat|head|tail|less|more|bat)\b/, desc: "read file", summary: "Display file contents" },
+    { regex: /^\s*(ls|dir|tree)\b/, desc: "list", summary: "List directory contents" },
+    { regex: /^\s*(grep|rg|ag|ack)\b/, desc: "search", summary: "Search text in files" },
+    { regex: /^\s*(echo|printf)\b/, desc: "echo/printf", summary: "Print text" },
 
     // System info
-    { regex: /^\s*(pwd|whoami|hostname|date|uname|uptime|id)\b/, desc: "system info", summary: "システム情報を表示" },
-    { regex: /^\s*(file|stat|du|df)\b/, desc: "file info", summary: "ファイル/ディスク情報を表示" },
-    { regex: /^\s*(which|type|command)\b/, desc: "command lookup", summary: "コマンドの場所を確認" },
-    { regex: /^\s*(env|printenv)\b/, desc: "environment", summary: "環境変数を表示" },
+    { regex: /^\s*(pwd|whoami|hostname|date|uname|uptime|id)\b/, desc: "system info", summary: "Show system information" },
+    { regex: /^\s*(file|stat|du|df)\b/, desc: "file info", summary: "Show file/disk information" },
+    { regex: /^\s*(which|type|command)\b/, desc: "command lookup", summary: "Look up command location" },
+    { regex: /^\s*(env|printenv)\b/, desc: "environment", summary: "Show environment variables" },
 
     // Text processing
-    { regex: /^\s*(wc|sort|uniq|cut|tr|column|fold)\b/, desc: "text processing", summary: "テキストを加工/集計" },
-    { regex: /^\s*(diff|comm|cmp)\b/, desc: "diff/compare", summary: "ファイルの差分を比較" },
+    { regex: /^\s*(wc|sort|uniq|cut|tr|column|fold)\b/, desc: "text processing", summary: "Process/transform text" },
+    { regex: /^\s*(diff|comm|cmp)\b/, desc: "diff/compare", summary: "Compare files" },
 
     // Find (without -exec/-delete, checked after Lv.2 patterns)
-    { regex: /^\s*find\b/, desc: "find", summary: "ファイルを検索" },
+    { regex: /^\s*find\b/, desc: "find", summary: "Search for files" },
 
     // Git read-only
-    { regex: /^\s*git\s+(status|log|diff|show|branch|tag|remote|stash\s+list)\b/, desc: "git read", summary: "Gitの状態/履歴を表示" },
+    { regex: /^\s*git\s+(status|log|diff|show|branch|tag|remote|stash\s+list)\b/, desc: "git read", summary: "Show Git status/history" },
 
     // Data processing
-    { regex: /^\s*(jq|yq)\b/, desc: "data query", summary: "JSON/YAMLデータを読み取り" },
-    { regex: /^\s*(xxd|od|hexdump)\b/, desc: "hex dump", summary: "バイナリデータを表示" },
+    { regex: /^\s*(jq|yq)\b/, desc: "data query", summary: "Query JSON/YAML data" },
+    { regex: /^\s*(xxd|od|hexdump)\b/, desc: "hex dump", summary: "Display binary data" },
 
     // Help
-    { regex: /^\s*(man|help)\b/, desc: "help", summary: "マニュアル/ヘルプを表示" },
-    { regex: /--help\b/, desc: "--help", summary: "コマンドのヘルプを表示" },
+    { regex: /^\s*(man|help)\b/, desc: "help", summary: "Show manual/help" },
+    { regex: /--help\b/, desc: "--help", summary: "Show command help" },
 
     // Docker read-only
-    { regex: /^\s*docker\s+(ps|images|logs|inspect)\b/, desc: "docker read", summary: "Dockerの状態を表示" },
+    { regex: /^\s*docker\s+(ps|images|logs|inspect)\b/, desc: "docker read", summary: "Show Docker status" },
 
     // Test/conditionals
-    { regex: /^\s*(test|\[)\b/, desc: "test/conditional", summary: "条件を評価" },
+    { regex: /^\s*(test|\[)\b/, desc: "test/conditional", summary: "Evaluate condition" },
   ],
 };
 
@@ -175,7 +175,7 @@ function assessDanger(command) {
     }
   }
   // Default: Lv.2 (unknown command, assume possible side effects)
-  return { level: 2, matchedPattern: null, summary: "不明なコマンド（副作用の可能性あり）" };
+  return { level: 2, matchedPattern: null, summary: "Unknown command (possible side effects)" };
 }
 
 // Main: read hook input from stdin, assess, write state

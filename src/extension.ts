@@ -275,7 +275,7 @@ function showDetails(): void {
       ? lastState.matchedPattern
       : "unknown";
 
-  const summary = lastState.summary || "不明なコマンド（副作用の可能性あり）";
+  const summary = lastState.summary || "Unknown command (possible side effects)";
 
   vscode.window.showInformationMessage(
     `Lv.${lastState.level} [${pattern}] ${summary}\n\nCommand: ${lastState.command}`
