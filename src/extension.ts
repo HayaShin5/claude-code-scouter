@@ -185,6 +185,7 @@ let statusBarItem: vscode.StatusBarItem;
 let fileWatcher: fs.FSWatcher | undefined;
 let lastTimestamp = 0;
 let lastState: DangerState | null = null;
+let activeWarning: vscode.Disposable | undefined;
 
 function updateStatusBar(state: DangerState): void {
   const icon = LEVEL_ICONS[state.level] || "⚪";
@@ -215,12 +216,14 @@ function readAndUpdateState(): void {
 
     updateStatusBar(state);
 
-    // Warning notification for Lv.4 (danger)
+    // Warning notification for Lv.4 (danger) — auto-dismiss after 5s
     if (state.level >= 4) {
       const warn = state.summary || state.matchedPattern || "";
-      vscode.window.showWarningMessage(
-        `⚠️ Lv.${state.level} ${warn}: ${state.command}`
-      );
+      const msg = `⚠️ Lv.${state.level} ${warn}: ${truncateCommand(state.command)}`;
+      if (activeWarning) {
+        activeWarning.dispose();
+      }
+      activeWarning = vscode.window.setStatusBarMessage(msg, 5000);
     }
   } catch {
     // Invalid JSON or read error: keep previous state, don't crash
