@@ -315,6 +315,44 @@ describe("assessDanger", () => {
     assert.notEqual(assessDanger("ssh-keygen -t rsa").level, 4);
   });
 
+  // --- Environment keyword escalation ---
+
+  // Production: escalate to Lv.4 (only when base >= Lv.2)
+  it("cp to production/ → Lv.4 (escalated from Lv.2)", () => {
+    assert.equal(assessDanger("cp config.yml production/").level, 4);
+  });
+  it("git push origin prod → Lv.4 (escalated from Lv.3)", () => {
+    assert.equal(assessDanger("git push origin prod").level, 4);
+  });
+  it("npm run deploy:production → Lv.4 (escalated from Lv.3)", () => {
+    assert.equal(assessDanger("npm run deploy:production").level, 4);
+  });
+  it("unknown command with prod → Lv.4 (escalated from Lv.3)", () => {
+    assert.equal(assessDanger("hoge prod").level, 4);
+  });
+  it("cat production.log → Lv.1 (no escalation for read-only)", () => {
+    assert.equal(assessDanger("cat production.log").level, 1);
+  });
+  it("grep error production.log → Lv.1 (no escalation for read-only)", () => {
+    assert.equal(assessDanger("grep error production.log").level, 1);
+  });
+
+  // Staging: escalate to Lv.3 (only when base >= Lv.2)
+  it("cp to staging/ → Lv.3 (escalated from Lv.2)", () => {
+    assert.equal(assessDanger("cp config.yml staging/").level, 3);
+  });
+  it("unknown command with stg → Lv.3 (no change, already Lv.3)", () => {
+    assert.equal(assessDanger("hoge stg").level, 3);
+  });
+  it("cat staging.log → Lv.1 (no escalation for read-only)", () => {
+    assert.equal(assessDanger("cat staging.log").level, 1);
+  });
+
+  // Already Lv.4 commands: no downgrade from env keyword
+  it("sudo on staging → Lv.4 (not downgraded to Lv.3)", () => {
+    assert.equal(assessDanger("sudo deploy staging").level, 4);
+  });
+
   // --- Summary field ---
 
   it("summary is returned", () => {

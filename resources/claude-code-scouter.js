@@ -202,16 +202,41 @@ const patterns = {
   ],
 };
 
+// Environment keyword escalation (only applied when base level >= 2)
+const envEscalation = [
+  { regex: /\b(prod|production)\b/i, level: 4, desc: "production env", summary: "Targets production environment" },
+  { regex: /\b(stg|staging)\b/i, level: 3, desc: "staging env", summary: "Targets staging environment" },
+];
+
 function assessDanger(command) {
+  let result = null;
+
   for (const level of [4, 3, 2, 1]) {
     for (const pattern of patterns[level]) {
       if (pattern.regex.test(command)) {
-        return { level, matchedPattern: pattern.desc, summary: pattern.summary };
+        result = { level, matchedPattern: pattern.desc, summary: pattern.summary };
+        break;
+      }
+    }
+    if (result) { break; }
+  }
+
+  // Default: Lv.3 (unknown command — flag for review)
+  if (!result) {
+    result = { level: 3, matchedPattern: null, summary: "Unknown command (possible side effects)" };
+  }
+
+  // Escalate by environment keyword (only for commands with side effects)
+  if (result.level >= 2) {
+    for (const env of envEscalation) {
+      if (env.regex.test(command) && env.level > result.level) {
+        result = { level: env.level, matchedPattern: env.desc, summary: env.summary };
+        break;
       }
     }
   }
-  // Default: Lv.3 (unknown command — flag for review)
-  return { level: 3, matchedPattern: null, summary: "Unknown command (possible side effects)" };
+
+  return result;
 }
 
 // Main: read hook input from stdin, assess, write state
