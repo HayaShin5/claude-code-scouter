@@ -8,6 +8,7 @@ Claude Code Scouter のステータスバー表示やコマンド説明文がす
 - `extension.ts` のハードコードされた文字列を翻訳キー参照に置き換える
 - `claude-code-scouter.js` の 80+ パターンの `summary` を多言語対応にする
 - VSCode のロケール設定に基づく自動言語検出を実装する
+- `package.json` に `claude-code-scouter.language` 設定（`auto` / `en` / `ja`）を追加し、ユーザーが手動で言語を切り替えられるようにする
 - 英語をデフォルトとし、翻訳が見つからない場合は英語にフォールバックする
 
 **翻訳の責務分担**: hook スクリプト（`claude-code-scouter.js`）は VSCode プロセス外で動作するため、hook 側は従来通り英語の `summary` を state ファイルに書き込む。翻訳は VSCode 拡張側（`extension.ts`）がステータスバー表示時にパターンキーを元に行う。これにより IPC フォーマットは変更不要。
@@ -18,7 +19,7 @@ Claude Code Scouter のステータスバー表示やコマンド説明文がす
 
 ### New Capabilities
 
-- `i18n-support`: 多言語リソース管理（翻訳ファイル EN/JA）、VSCode ロケールに基づく言語検出、フォールバック機構
+- `i18n-support`: 多言語リソース管理（翻訳ファイル EN/JA）、VSCode ロケールに基づく自動言語検出、手動言語設定（`auto`/`en`/`ja`）、フォールバック機構
 
 ### Modified Capabilities
 
@@ -28,7 +29,7 @@ Claude Code Scouter のステータスバー表示やコマンド説明文がす
 
 ## Impact
 
-- **変更対象ファイル**: `src/extension.ts`, `resources/claude-code-scouter.js`（summary の翻訳キー整理）
+- **変更対象ファイル**: `src/extension.ts`, `resources/claude-code-scouter.js`（summary の翻訳キー整理）, `package.json`（設定定義追加）
 - **新規ファイル**: 翻訳リソースファイル（`en.json`, `ja.json` 等）
 - **IPC フォーマット**: 変更なし（hook は英語 summary を書き込み、拡張側で翻訳）
 - **テスト**: 既存テストへの影響は軽微。新規テストとして言語切り替え、フォールバック、翻訳キー網羅性のテストを追加
