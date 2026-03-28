@@ -26,7 +26,18 @@
         "command": "claude-code-scouter.showDetails",
         "title": "Claude Code Scouter: Show Details"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Claude Code Scouter",
+      "properties": {
+        "claude-code-scouter.language": {
+          "type": "string",
+          "enum": ["auto", "en", "ja"],
+          "default": "auto",
+          "description": "Display language for danger level descriptions. 'auto' detects from VSCode locale."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
