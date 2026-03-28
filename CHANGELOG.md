@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0] - 2026-03-28
+
+### Added
+- 🌐 English / Japanese (EN/JA) language switching support
+- Translation resource files (`resources/i18n/en.json`, `ja.json`) covering 102 pattern descriptions and 7 UI strings
+- `claude-code-scouter.language` setting (`auto` / `en` / `ja`) — `auto` detects from VSCode locale
+- Real-time language switching without restart via settings change listener
+- English fallback when translation key is missing
+- 15 i18n tests (key coverage, summary matching, uniqueness constraint, fallback, language resolution)
+
+### Changed
+- Status bar, tooltips, detail popup, and warning notifications now use translated text via `matchedPattern` lookup instead of hardcoded English strings
+
 ## [0.2.0] - 2026-03-18
 
 ### Added

@@ -2,7 +2,7 @@
   "name": "claude-code-scouter",
   "displayName": "Claude Code Scouter",
   "description": "Scans and displays danger level of commands Claude Code asks to execute",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "icon": "src/assets/icon.jpg",
   "publisher": "HayaShin5",
   "license": "MIT",
