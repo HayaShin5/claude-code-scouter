@@ -35,6 +35,15 @@ describe("assessDanger", () => {
   it("DROP TABLE → Lv.4", () => {
     assert.equal(assessDanger("DROP TABLE users").level, 4);
   });
+  it("DROP DATABASE → Lv.4", () => {
+    assert.equal(assessDanger("DROP DATABASE mydb").level, 4);
+  });
+  it("bare DROP word → not Lv.4", () => {
+    assert.notEqual(assessDanger('echo "drop this item"').level, 4);
+  });
+  it("yarn publish → Lv.4", () => {
+    assert.equal(assessDanger("yarn publish").level, 4);
+  });
   it("git push → Lv.4", () => {
     assert.equal(assessDanger("git push origin main").level, 4);
   });

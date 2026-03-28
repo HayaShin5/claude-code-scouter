@@ -34,7 +34,7 @@ const patterns = {
     { regex: /\b(iptables|ufw)\b/, desc: "firewall", summary: "Modify firewall rules" },
 
     // SQL destructive
-    { regex: /\bDROP\b/i, desc: "DROP (SQL)", summary: "Drop database table/object" },
+    { regex: /\bDROP\s+(TABLE|DATABASE|INDEX|VIEW|SCHEMA)\b/i, desc: "DROP (SQL)", summary: "Drop database table/object" },
     { regex: /\bTRUNCATE\s+TABLE\b/i, desc: "TRUNCATE TABLE (SQL)", summary: "Delete all rows from table" },
 
     // Git dangerous
@@ -54,6 +54,7 @@ const patterns = {
 
     // Package publishing
     { regex: /\bnpm\s+publish\b/, desc: "npm publish", summary: "Publish package to npm registry" },
+    { regex: /\byarn\s+publish\b/, desc: "yarn publish", summary: "Publish package to npm registry" },
 
     // Docker external
     { regex: /\bdocker\s+push\b/, desc: "docker push", summary: "Push Docker image to registry" },
