@@ -34,11 +34,13 @@ const patterns = {
     { regex: /\b(iptables|ufw)\b/, desc: "firewall", summary: "Modify firewall rules" },
 
     // SQL destructive
-    { regex: /\bDROP\b/i, desc: "DROP (SQL)", summary: "Drop database table/object" },
+    { regex: /\bDROP\s+(TABLE|DATABASE|INDEX|VIEW|SCHEMA)\b/i, desc: "DROP (SQL)", summary: "Drop database table/object" },
     { regex: /\bTRUNCATE\s+TABLE\b/i, desc: "TRUNCATE TABLE (SQL)", summary: "Delete all rows from table" },
 
-    // Git dangerous
-    { regex: /\bgit\s+push\b/, desc: "git push", summary: "Push code to remote repository" },
+    // Git dangerous (irreversible remote operations)
+    { regex: /\bgit\s+push\s+.*--force\b/, desc: "git push --force", summary: "Force-push to remote (rewrites history)" },
+    { regex: /\bgit\s+push\s+.*--force-with-lease\b/, desc: "git push --force-with-lease", summary: "Force-push with lease (rewrites history)" },
+    { regex: /\bgit\s+push\s+.*-f\b/, desc: "git push -f", summary: "Force-push to remote (rewrites history)" },
 
     // Network / external communication
     { regex: /\bcurl\b/, desc: "curl", summary: "Send HTTP request to external URL" },
@@ -49,20 +51,15 @@ const patterns = {
     { regex: /\b(nc|netcat|ncat)\b/, desc: "netcat", summary: "Open arbitrary network connection" },
     { regex: /\b(telnet|ftp|sftp)\b/, desc: "telnet/ftp", summary: "Connect/transfer to remote server" },
 
-    // GitHub CLI mutations
-    { regex: /\bgh\s+(pr|issue)\s+(create|merge|close)/, desc: "gh pr/issue mutation", summary: "Create/modify GitHub PR or issue" },
+    // GitHub CLI dangerous mutations
+    { regex: /\bgh\s+pr\s+(merge|close)/, desc: "gh pr merge/close", summary: "Merge or close GitHub PR" },
 
     // Package publishing
     { regex: /\bnpm\s+publish\b/, desc: "npm publish", summary: "Publish package to npm registry" },
+    { regex: /\byarn\s+publish\b/, desc: "yarn publish", summary: "Publish package to npm registry" },
 
-    // Docker dangerous
+    // Docker external
     { regex: /\bdocker\s+push\b/, desc: "docker push", summary: "Push Docker image to registry" },
-    { regex: /\bdocker\s+run\b/, desc: "docker run", summary: "Start container (may affect host)" },
-    { regex: /\bdocker\s+exec\b/, desc: "docker exec", summary: "Execute command in container" },
-    { regex: /\bdocker\s+build\b/, desc: "docker build", summary: "Build Docker image (runs arbitrary code)" },
-    { regex: /\bdocker\s+rm\b/, desc: "docker rm", summary: "Remove container" },
-    { regex: /\bdocker\s+rmi\b/, desc: "docker rmi", summary: "Remove Docker image" },
-    { regex: /\bdocker[-\s]compose\s+(up|down)\b/, desc: "docker-compose up/down", summary: "Start/stop multiple containers" },
 
     // Pipe to shell (remote code execution)
     { regex: /\|\s*(sh|bash|zsh)\b/, desc: "pipe to shell", summary: "Pipe external code into shell" },
@@ -82,6 +79,14 @@ const patterns = {
     { regex: /\bpkill\b/, desc: "pkill", summary: "Terminate processes by name" },
     { regex: /\bkillall\b/, desc: "killall", summary: "Terminate all processes by name" },
     { regex: /\bnohup\b/, desc: "nohup", summary: "Run persistently in background" },
+
+    // GitHub CLI low-risk mutations
+    { regex: /\bgh\s+pr\s+create\b/, desc: "gh pr create", summary: "Create GitHub pull request" },
+    { regex: /\bgh\s+issue\s+create\b/, desc: "gh issue create", summary: "Create GitHub issue" },
+    { regex: /\bgh\s+issue\s+close\b/, desc: "gh issue close", summary: "Close GitHub issue" },
+
+    // Git push (non-force)
+    { regex: /\bgit\s+push\b/, desc: "git push", summary: "Push code to remote repository" },
 
     // Git hard-to-reverse
     { regex: /\bgit\s+reset\b/, desc: "git reset", summary: "Reset commit history" },
@@ -103,7 +108,13 @@ const patterns = {
     // Amplifier
     { regex: /\bxargs\b/, desc: "xargs", summary: "Batch-execute command with input args" },
 
-    // Docker local control
+    // Docker local operations
+    { regex: /\bdocker\s+run\b/, desc: "docker run", summary: "Start container (may affect host)" },
+    { regex: /\bdocker\s+exec\b/, desc: "docker exec", summary: "Execute command in container" },
+    { regex: /\bdocker\s+build\b/, desc: "docker build", summary: "Build Docker image (runs arbitrary code)" },
+    { regex: /\bdocker\s+rm\b/, desc: "docker rm", summary: "Remove container" },
+    { regex: /\bdocker\s+rmi\b/, desc: "docker rmi", summary: "Remove Docker image" },
+    { regex: /\bdocker[-\s]compose\s+(up|down)\b/, desc: "docker-compose up/down", summary: "Start/stop multiple containers" },
     { regex: /\bdocker\s+stop\b/, desc: "docker stop", summary: "Stop container" },
   ],
   2: [
@@ -191,16 +202,41 @@ const patterns = {
   ],
 };
 
+// Environment keyword escalation (only applied when base level >= 2)
+const envEscalation = [
+  { regex: /\b(prod|production)\b/i, level: 4, desc: "production env", summary: "Targets production environment" },
+  { regex: /\b(stg|staging)\b/i, level: 3, desc: "staging env", summary: "Targets staging environment" },
+];
+
 function assessDanger(command) {
+  let result = null;
+
   for (const level of [4, 3, 2, 1]) {
     for (const pattern of patterns[level]) {
       if (pattern.regex.test(command)) {
-        return { level, matchedPattern: pattern.desc, summary: pattern.summary };
+        result = { level, matchedPattern: pattern.desc, summary: pattern.summary };
+        break;
+      }
+    }
+    if (result) { break; }
+  }
+
+  // Default: Lv.3 (unknown command — flag for review)
+  if (!result) {
+    result = { level: 3, matchedPattern: null, summary: "Unknown command (possible side effects)" };
+  }
+
+  // Escalate by environment keyword (only for commands with side effects)
+  if (result.level >= 2) {
+    for (const env of envEscalation) {
+      if (env.regex.test(command) && env.level > result.level) {
+        result = { level: env.level, matchedPattern: env.desc, summary: env.summary };
+        break;
       }
     }
   }
-  // Default: Lv.3 (unknown command — flag for review)
-  return { level: 3, matchedPattern: null, summary: "Unknown command (possible side effects)" };
+
+  return result;
 }
 
 // Main: read hook input from stdin, assess, write state
