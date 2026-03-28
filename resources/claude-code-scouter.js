@@ -37,8 +37,10 @@ const patterns = {
     { regex: /\bDROP\s+(TABLE|DATABASE|INDEX|VIEW|SCHEMA)\b/i, desc: "DROP (SQL)", summary: "Drop database table/object" },
     { regex: /\bTRUNCATE\s+TABLE\b/i, desc: "TRUNCATE TABLE (SQL)", summary: "Delete all rows from table" },
 
-    // Git dangerous
-    { regex: /\bgit\s+push\b/, desc: "git push", summary: "Push code to remote repository" },
+    // Git dangerous (irreversible remote operations)
+    { regex: /\bgit\s+push\s+.*--force\b/, desc: "git push --force", summary: "Force-push to remote (rewrites history)" },
+    { regex: /\bgit\s+push\s+.*--force-with-lease\b/, desc: "git push --force-with-lease", summary: "Force-push with lease (rewrites history)" },
+    { regex: /\bgit\s+push\s+.*-f\b/, desc: "git push -f", summary: "Force-push to remote (rewrites history)" },
 
     // Network / external communication
     { regex: /\bcurl\b/, desc: "curl", summary: "Send HTTP request to external URL" },
@@ -82,6 +84,9 @@ const patterns = {
     { regex: /\bgh\s+pr\s+create\b/, desc: "gh pr create", summary: "Create GitHub pull request" },
     { regex: /\bgh\s+issue\s+create\b/, desc: "gh issue create", summary: "Create GitHub issue" },
     { regex: /\bgh\s+issue\s+close\b/, desc: "gh issue close", summary: "Close GitHub issue" },
+
+    // Git push (non-force)
+    { regex: /\bgit\s+push\b/, desc: "git push", summary: "Push code to remote repository" },
 
     // Git hard-to-reverse
     { regex: /\bgit\s+reset\b/, desc: "git reset", summary: "Reset commit history" },

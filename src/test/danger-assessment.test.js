@@ -44,8 +44,17 @@ describe("assessDanger", () => {
   it("yarn publish → Lv.4", () => {
     assert.equal(assessDanger("yarn publish").level, 4);
   });
-  it("git push → Lv.4", () => {
-    assert.equal(assessDanger("git push origin main").level, 4);
+  it("git push --force → Lv.4", () => {
+    assert.equal(assessDanger("git push --force origin main").level, 4);
+  });
+  it("git push --force-with-lease → Lv.4", () => {
+    assert.equal(assessDanger("git push --force-with-lease origin main").level, 4);
+  });
+  it("git push -f → Lv.4", () => {
+    assert.equal(assessDanger("git push -f origin main").level, 4);
+  });
+  it("git push → Lv.3", () => {
+    assert.equal(assessDanger("git push origin main").level, 3);
   });
   it("curl → Lv.4", () => {
     assert.equal(assessDanger("curl https://example.com").level, 4);
