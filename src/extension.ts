@@ -7,6 +7,74 @@ const STATE_FILE = "/tmp/claude-danger-state.json";
 const HOOK_SCRIPT_NAME = "claude-code-scouter.js";
 const COMMAND_MAX_LENGTH = 50;
 
+// --- i18n ---
+
+type TranslationData = {
+  patterns: Record<string, string>;
+  ui: Record<string, string>;
+};
+
+let currentTranslations: TranslationData = { patterns: {}, ui: {} };
+let fallbackTranslations: TranslationData = { patterns: {}, ui: {} };
+
+function resolveLocale(): string {
+  const config = vscode.workspace.getConfiguration("claude-code-scouter");
+  const setting = config.get<string>("language", "auto");
+  if (setting === "en" || setting === "ja") {
+    return setting;
+  }
+  // auto: detect from VSCode locale
+  const vscodeLang = vscode.env.language;
+  if (vscodeLang.startsWith("ja")) {
+    return "ja";
+  }
+  return "en";
+}
+
+function loadTranslations(extensionPath: string): void {
+  const locale = resolveLocale();
+  const i18nDir = path.join(extensionPath, "resources", "i18n");
+
+  // Always load English as fallback
+  try {
+    const enContent = fs.readFileSync(path.join(i18nDir, "en.json"), "utf-8");
+    fallbackTranslations = JSON.parse(enContent);
+  } catch {
+    fallbackTranslations = { patterns: {}, ui: {} };
+  }
+
+  if (locale === "en") {
+    currentTranslations = fallbackTranslations;
+  } else {
+    try {
+      const content = fs.readFileSync(path.join(i18nDir, `${locale}.json`), "utf-8");
+      currentTranslations = JSON.parse(content);
+    } catch {
+      currentTranslations = fallbackTranslations;
+    }
+  }
+}
+
+function t(category: "patterns" | "ui", key: string): string {
+  const section = currentTranslations[category];
+  if (section && key in section) {
+    return section[key];
+  }
+  const fallback = fallbackTranslations[category];
+  if (fallback && key in fallback) {
+    return fallback[key];
+  }
+  return key;
+}
+
+function tFormat(category: "patterns" | "ui", key: string, vars: Record<string, string>): string {
+  let text = t(category, key);
+  for (const [k, v] of Object.entries(vars)) {
+    text = text.replace(`{${k}}`, v);
+  }
+  return text;
+}
+
 interface DangerState {
   level: number;
   command: string;
@@ -190,17 +258,19 @@ let activeWarning: vscode.Disposable | undefined;
 function updateStatusBar(state: DangerState): void {
   const icon = LEVEL_ICONS[state.level] || "⚪";
   const cmdDisplay = truncateCommand(state.command);
-  const summaryText = state.summary ? ` - ${state.summary}` : "";
+  const summary = state.matchedPattern
+    ? t("patterns", state.matchedPattern)
+    : t("ui", "defaultSummary");
   statusBarItem.text = `${icon} Lv.${state.level} ${cmdDisplay}`;
   statusBarItem.backgroundColor = getBackgroundColor(state.level);
-  statusBarItem.tooltip = `${state.matchedPattern || "unknown"}${summaryText}\n\nClick for details`;
+  statusBarItem.tooltip = `${state.matchedPattern || "unknown"} - ${summary}\n\n${t("ui", "clickForDetails")}`;
   lastState = state;
 }
 
 function showWaitingState(): void {
-  statusBarItem.text = "⚪ Waiting...";
+  statusBarItem.text = `⚪ ${t("ui", "waiting")}`;
   statusBarItem.backgroundColor = undefined;
-  statusBarItem.tooltip = "Waiting for Claude Code command";
+  statusBarItem.tooltip = t("ui", "waitingTooltip");
 }
 
 function readAndUpdateState(): void {
@@ -218,8 +288,14 @@ function readAndUpdateState(): void {
 
     // Warning notification for Lv.4 (danger) — auto-dismiss after 5s
     if (state.level >= 4) {
-      const warn = state.summary || state.matchedPattern || "";
-      const msg = `⚠️ Lv.${state.level} ${warn}: ${truncateCommand(state.command)}`;
+      const warn = state.matchedPattern
+        ? t("patterns", state.matchedPattern)
+        : t("ui", "defaultSummary");
+      const msg = tFormat("ui", "dangerWarning", {
+        level: String(state.level),
+        warn,
+        command: truncateCommand(state.command),
+      });
       if (activeWarning) {
         activeWarning.dispose();
       }
@@ -268,27 +344,30 @@ function stopWatching(): void {
 
 function showDetails(): void {
   if (!lastState) {
-    vscode.window.showInformationMessage(
-      "No command has been evaluated yet."
-    );
+    vscode.window.showInformationMessage(t("ui", "noCommand"));
     return;
   }
 
-  const pattern =
-    lastState.matchedPattern !== null
-      ? lastState.matchedPattern
-      : "unknown";
+  const pattern = lastState.matchedPattern ?? "unknown";
+  const summary = lastState.matchedPattern
+    ? t("patterns", lastState.matchedPattern)
+    : t("ui", "defaultSummary");
 
-  const summary = lastState.summary || "Unknown command (possible side effects)";
-
-  vscode.window.showInformationMessage(
-    `Lv.${lastState.level} [${pattern}] ${summary}\n\nCommand: ${lastState.command}`
-  );
+  const msg = tFormat("ui", "detailFormat", {
+    level: String(lastState.level),
+    pattern,
+    summary,
+    command: lastState.command,
+  });
+  vscode.window.showInformationMessage(msg);
 }
 
 // --- Lifecycle ---
 
 export function activate(context: vscode.ExtensionContext): void {
+  // Load translations
+  loadTranslations(context.extensionPath);
+
   // Initialize status bar (left side, high priority)
   statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
@@ -304,6 +383,20 @@ export function activate(context: vscode.ExtensionContext): void {
     showDetails
   );
   context.subscriptions.push(cmd);
+
+  // Watch for language setting changes
+  const configListener = vscode.workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration("claude-code-scouter.language")) {
+      loadTranslations(context.extensionPath);
+      // Refresh display with new language
+      if (lastState) {
+        updateStatusBar(lastState);
+      } else {
+        showWaitingState();
+      }
+    }
+  });
+  context.subscriptions.push(configListener);
 
   // Deploy hook script & register hook
   deployHookScript(context);
