@@ -49,20 +49,14 @@ const patterns = {
     { regex: /\b(nc|netcat|ncat)\b/, desc: "netcat", summary: "Open arbitrary network connection" },
     { regex: /\b(telnet|ftp|sftp)\b/, desc: "telnet/ftp", summary: "Connect/transfer to remote server" },
 
-    // GitHub CLI mutations
-    { regex: /\bgh\s+(pr|issue)\s+(create|merge|close)/, desc: "gh pr/issue mutation", summary: "Create/modify GitHub PR or issue" },
+    // GitHub CLI dangerous mutations
+    { regex: /\bgh\s+pr\s+(merge|close)/, desc: "gh pr merge/close", summary: "Merge or close GitHub PR" },
 
     // Package publishing
     { regex: /\bnpm\s+publish\b/, desc: "npm publish", summary: "Publish package to npm registry" },
 
-    // Docker dangerous
+    // Docker external
     { regex: /\bdocker\s+push\b/, desc: "docker push", summary: "Push Docker image to registry" },
-    { regex: /\bdocker\s+run\b/, desc: "docker run", summary: "Start container (may affect host)" },
-    { regex: /\bdocker\s+exec\b/, desc: "docker exec", summary: "Execute command in container" },
-    { regex: /\bdocker\s+build\b/, desc: "docker build", summary: "Build Docker image (runs arbitrary code)" },
-    { regex: /\bdocker\s+rm\b/, desc: "docker rm", summary: "Remove container" },
-    { regex: /\bdocker\s+rmi\b/, desc: "docker rmi", summary: "Remove Docker image" },
-    { regex: /\bdocker[-\s]compose\s+(up|down)\b/, desc: "docker-compose up/down", summary: "Start/stop multiple containers" },
 
     // Pipe to shell (remote code execution)
     { regex: /\|\s*(sh|bash|zsh)\b/, desc: "pipe to shell", summary: "Pipe external code into shell" },
@@ -82,6 +76,11 @@ const patterns = {
     { regex: /\bpkill\b/, desc: "pkill", summary: "Terminate processes by name" },
     { regex: /\bkillall\b/, desc: "killall", summary: "Terminate all processes by name" },
     { regex: /\bnohup\b/, desc: "nohup", summary: "Run persistently in background" },
+
+    // GitHub CLI low-risk mutations
+    { regex: /\bgh\s+pr\s+create\b/, desc: "gh pr create", summary: "Create GitHub pull request" },
+    { regex: /\bgh\s+issue\s+create\b/, desc: "gh issue create", summary: "Create GitHub issue" },
+    { regex: /\bgh\s+issue\s+close\b/, desc: "gh issue close", summary: "Close GitHub issue" },
 
     // Git hard-to-reverse
     { regex: /\bgit\s+reset\b/, desc: "git reset", summary: "Reset commit history" },
@@ -103,7 +102,13 @@ const patterns = {
     // Amplifier
     { regex: /\bxargs\b/, desc: "xargs", summary: "Batch-execute command with input args" },
 
-    // Docker local control
+    // Docker local operations
+    { regex: /\bdocker\s+run\b/, desc: "docker run", summary: "Start container (may affect host)" },
+    { regex: /\bdocker\s+exec\b/, desc: "docker exec", summary: "Execute command in container" },
+    { regex: /\bdocker\s+build\b/, desc: "docker build", summary: "Build Docker image (runs arbitrary code)" },
+    { regex: /\bdocker\s+rm\b/, desc: "docker rm", summary: "Remove container" },
+    { regex: /\bdocker\s+rmi\b/, desc: "docker rmi", summary: "Remove Docker image" },
+    { regex: /\bdocker[-\s]compose\s+(up|down)\b/, desc: "docker-compose up/down", summary: "Start/stop multiple containers" },
     { regex: /\bdocker\s+stop\b/, desc: "docker stop", summary: "Stop container" },
   ],
   2: [
